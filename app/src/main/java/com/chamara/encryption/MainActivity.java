@@ -1,6 +1,7 @@
 package com.chamara.encryption;
 
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -11,6 +12,8 @@ import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
 
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -19,10 +22,11 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     MaterialAutoCompleteTextView spinner;
-    TextInputEditText txtInput,txtKey,txtOutput;
-    Button btnEncrypt,btnDecrypt,btnReset;
+    TextInputEditText txtInput, txtKey, txtOutput;
+    Button btnEncrypt, btnDecrypt, btnReset;
 
-    String ALGORITHM,TEXT_INPUT,ENCRYPTION_KEY,ENCRYPTED_TEXT;
+    String ALGORITHM, TEXT_INPUT, ENCRYPTION_KEY, ENCRYPTED_TEXT;
+    SecretKey SECRET_KEY_DES;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,12 +44,13 @@ public class MainActivity extends AppCompatActivity {
 
         ArrayList items = new ArrayList();
         items.add("AES");
-        items.add("Design");
-        items.add("Components");
-        items.add("Android");
+        items.add("DES");
+        items.add("RSA");
+        items.add("Blowfish");
+        items.add("Twofish");
 
         ArrayAdapter adapter;
-        adapter = new ArrayAdapter(this,R.layout.list_item,items);
+        adapter = new ArrayAdapter(this, R.layout.list_item, items);
 
         spinner.setAdapter(adapter);
 
@@ -53,10 +58,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 getInputData();
-                if (checkInputData() == true){
+                if (checkInputData() == true) {
                     if (ALGORITHM.equals("AES")) {
                         try {
                             encryptAES();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else if (ALGORITHM.equals("DES")) {
+                        try {
+                            encryptDES();
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -71,15 +82,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 getInputData();
-                if (checkInputData() == true){
+                if (checkInputData() == true) {
                     if (ALGORITHM.equals("AES")) {
                         try {
                             decryptAES();
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                    } else if (ALGORITHM.equals("DES")) {
+                        try {
+                            decryptDES();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     } else {
-                        Toast.makeText(MainActivity.this, "Plese select AES for now", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Plese select AES/DES for now", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -95,12 +112,43 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void decryptDES() throws Exception {
+        Toast.makeText(this, "Decrypting DES...", Toast.LENGTH_SHORT).show();
+
+        //SecretKeySpec key = generateKey(ENCRYPTION_KEY,"DES");
+        Cipher c = Cipher.getInstance("DES");
+        c.init(Cipher.DECRYPT_MODE, SECRET_KEY_DES);
+        byte[] decodedVal = Base64.decode(ENCRYPTED_TEXT, Base64.DEFAULT);
+        byte[] decVal = c.doFinal(decodedVal);
+        String decValStr = new String(decVal);
+        txtOutput.setText(decValStr);
+    }
+
+    private void encryptDES() throws Exception {
+        Toast.makeText(this, "Encrypting DES...", Toast.LENGTH_SHORT).show();
+
+        /*
+            using key generator instead of user input
+         */
+
+        KeyGenerator key = KeyGenerator.getInstance("DES");
+        SECRET_KEY_DES = key.generateKey();
+
+        Cipher cipher = Cipher.getInstance("DES");
+        cipher.init(Cipher.ENCRYPT_MODE, SECRET_KEY_DES);
+        byte[] input = TEXT_INPUT.getBytes(StandardCharsets.UTF_8);
+        byte[] input_encode = cipher.doFinal(input);
+        String encryptedVal = Base64.encodeToString(input_encode, Base64.DEFAULT);
+        txtOutput.setText(encryptedVal);
+
+    }
+
     private void decryptAES() throws Exception {
         Toast.makeText(this, "Decrypting AES...", Toast.LENGTH_SHORT).show();
-        SecretKeySpec key = generateKey(ENCRYPTION_KEY);
+        SecretKeySpec key = generateKey(ENCRYPTION_KEY, "AES");
         Cipher c = Cipher.getInstance("AES");
-        c.init(Cipher.DECRYPT_MODE,key);
-        byte[] decodedVal = Base64.decode(ENCRYPTED_TEXT,Base64.DEFAULT);
+        c.init(Cipher.DECRYPT_MODE, key);
+        byte[] decodedVal = Base64.decode(ENCRYPTED_TEXT, Base64.DEFAULT);
         byte[] decVal = c.doFinal(decodedVal);
         String decValStr = new String(decVal);
         txtOutput.setText(decValStr);
@@ -108,28 +156,29 @@ public class MainActivity extends AppCompatActivity {
 
     private void encryptAES() throws Exception {
         Toast.makeText(this, "Encrypting AES...", Toast.LENGTH_SHORT).show();
-        SecretKeySpec key = generateKey(ENCRYPTION_KEY);
+        SecretKeySpec key = generateKey(ENCRYPTION_KEY, "AES");
         Cipher c = Cipher.getInstance("AES");
-        c.init(Cipher.ENCRYPT_MODE,key);
+        c.init(Cipher.ENCRYPT_MODE, key);
         byte[] encVal = c.doFinal(TEXT_INPUT.getBytes(StandardCharsets.UTF_8));
-        String encryptedVal = Base64.encodeToString(encVal,Base64.DEFAULT);
+        String encryptedVal = Base64.encodeToString(encVal, Base64.DEFAULT);
         txtOutput.setText(encryptedVal);
     }
-    private SecretKeySpec generateKey(String pass) throws Exception {
+
+    private SecretKeySpec generateKey(String pass, String algo) throws Exception {
         final MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] bytes = pass.getBytes("UTF-8");
-        digest.update(bytes,0,bytes.length);
+        digest.update(bytes, 0, bytes.length);
         byte[] key = digest.digest();
-        SecretKeySpec secretKeySpec = new SecretKeySpec(key,"AES");
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key, algo);
         return secretKeySpec;
     }
 
     private boolean checkInputData() {
-        if (ALGORITHM.length() > 1 && TEXT_INPUT.length() > 1 && ENCRYPTION_KEY.length() > 1 ) {
+        if (ALGORITHM.length() > 1 && TEXT_INPUT.length() > 1 && ENCRYPTION_KEY.length() > 1) {
             return true;    //checking all required fields filled.
         } else
             Toast.makeText(this, "Missing Required Field!", Toast.LENGTH_SHORT).show();
-            return false;
+        return false;
     }
 
     private void getInputData() {
