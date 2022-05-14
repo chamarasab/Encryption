@@ -9,7 +9,7 @@ Users communicate overall on social media, but messages are not secured when it 
 ### Outputs
 <table>
   <tr>
-    <td> <img src="https://github.com/chamarasab/Encryption/blob/master/Screenshot_1.png" width="240"/> </td>
-    <td> <img src="https://github.com/chamarasab/Encryption/blob/master/Screenshot_2.png" width="240"/> </td>
+    <td> <img src="https://github.com/chamarasab/Encryption/blob/master/Screenshot_1652497957.png" width="240"/> </td>
+    <td> <img src="https://github.com/chamarasab/Encryption/blob/master/Screenshot_1652497952.png" width="240"/> </td>
   </tr>
 <table>
