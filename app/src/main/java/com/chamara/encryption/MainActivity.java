@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                             e.printStackTrace();
                         }
                     } else {
-                        Toast.makeText(MainActivity.this, "Plese select AES for now", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Please select AES for now", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
                             e.printStackTrace();
                         }
                     } else {
-                        Toast.makeText(MainActivity.this, "Plese select AES/DES for now", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Please select AES/DES for now", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
